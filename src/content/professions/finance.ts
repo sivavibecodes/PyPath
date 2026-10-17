@@ -53,7 +53,7 @@ for c in clients:
     subtotal = c["hours"] * c["rate"]
     vat = subtotal * 0.20
     total = subtotal + vat
-    print(f"Invoice -> {c['name']:<12} | Net: ${subtotal:>8,.2f} | VAT: ${vat:>7,.2f} | Total: ${total:>9,.2f}")`,
+    print(f"Invoice -> {c['name']:<12} | Net: {subtotal:.2f} | VAT: {vat:.2f} | Total: {total:.2f}")`,
     },
     {
       id: 'fin-fx-scraper',
