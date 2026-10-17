@@ -25,9 +25,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+          cache: 'gradle'
 
       - name: Install NPM Dependencies
         run: npm ci
@@ -47,5 +45,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: PyPath-Standalone-APK
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
