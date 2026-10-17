@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "PyPath",
+    "slug": "pypath",
+    "scheme": "pypath",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "assetBundlePatterns": ["assets/**/*"],
+    "ios": {
+      "bundleIdentifier": "app.pypath.mobile",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "app.pypath.mobile",
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "supabaseUrl": "https://YOUR-PROJECT.supabase.co",
+      "supabaseAnonKey": "YOUR-ANON-KEY"
+    }
+  }
+}

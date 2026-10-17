@@ -1,0 +1,245 @@
+{
+  "schemaVersion": 1,
+  "id": "pro.marketing.l2-utm-autotagger",
+  "title": "Auto-Tag Every Campaign Link with UTM Parameters",
+  "summary": "Stop hand-building tracking links. Write a script that tags a whole spreadsheet of URLs consistently in under a second.",
+  "tier": "intermediate",
+  "profession": "marketing",
+  "estimatedMinutes": 14,
+  "xpReward": 40,
+  "tags": ["automation", "urls", "csv", "strings", "regex", "marketing-analytics"],
+  "concepts": ["stdlib.urllib", "files.csv", "strings.normalisation", "regex.sub", "dicts.update", "functions.return"],
+  "prerequisites": ["core.beginner.u5.l2-functions", "core.intermediate.u1.l3-dictionaries", "pro.marketing.l1-why-python"],
+  "certification": [
+    {
+      "exam": "PCAP",
+      "objective": "PCAP-31-03 2.x",
+      "description": "Strings: methods, slicing and processing text data."
+    },
+    {
+      "exam": "PCAP",
+      "objective": "PCAP-31-03 1.x",
+      "description": "Modules and packages: importing and using standard-library modules."
+    }
+  ],
+  "requiredPackages": [],
+  "cheatSheetRefs": ["urllib-parse", "csv-dictreader", "re-sub", "dict-update"],
+  "cards": [
+    {
+      "type": "explain",
+      "id": "explain-1",
+      "title": "What UTM tags are — and why humans get them wrong",
+      "body": "**UTM parameters** are the little `?utm_source=...` labels at the end of a link. Google Analytics, HubSpot and every other analytics tool read them to answer one question: *which campaign brought this visitor?*\n\nThe problem: they are fragile. `Facebook`, `facebook` and `fb` show up as **three different sources** in your reports. A link that already has `?ref=nav` breaks if you blindly paste `?utm_source=...` on the end. A missing `#reviews` anchor sends people to the wrong part of the page.\n\nPython's built-in `urllib.parse` module understands URL structure, so your script can:\n\n1. **Split** a URL into parts (`urlparse`)\n2. **Read** the existing query string into a dictionary (`parse_qsl`)\n3. **Add/overwrite** the UTM keys (`dict.update`)\n4. **Rebuild** the URL safely (`urlencode` + `urlunparse`), keeping the `#fragment` intact.",
+      "diagram": {
+        "kind": "table",
+        "caption": "The five standard UTM parameters",
+        "columns": ["Parameter", "Answers", "Example"],
+        "rows": [
+          ["utm_source", "Who sent the traffic?", "facebook, newsletter, google"],
+          ["utm_medium", "What kind of channel?", "paid_social, email, cpc"],
+          ["utm_campaign", "Which campaign?", "spring_sale_2026"],
+          ["utm_content", "Which ad / link variant?", "hero_banner_v2"],
+          ["utm_term", "Which paid keyword?", "running_shoes"]
+        ]
+      },
+      "keyPoints": [
+        "A URL has parts: scheme, domain, path, query (`?a=1&b=2`) and fragment (`#section`).",
+        "Never glue strings together to build URLs — use `urllib.parse` so existing parameters and anchors survive.",
+        "Normalise campaign names (lowercase, underscores, no symbols) so reports group correctly.",
+        "A dictionary's `.update()` adds new keys and overwrites existing ones — exactly what re-tagging needs."
+      ],
+      "realWorld": {
+        "title": "Why this matters in the real world",
+        "body": "A typical product launch needs 100+ tagged links across ads, emails, influencer posts and partner sites. Done by hand in a spreadsheet, that is around an hour and a half of copy-paste — and a single typo silently mis-attributes revenue for the whole quarter. This script turns it into a repeatable, zero-typo step you can hand to anyone on the team.",
+        "roi": {
+          "manualMinutes": 90,
+          "automatedSeconds": 0.3,
+          "frequency": "per_campaign",
+          "annualHoursSaved": 72,
+          "note": "Assumes ~120 links per campaign at ~45 s each, 4 campaigns per month."
+        }
+      }
+    },
+    {
+      "type": "demonstrate",
+      "id": "demo-1",
+      "title": "Walkthrough: tagging one link correctly",
+      "runnable": true,
+      "code": "from urllib.parse import urlencode, urlparse, urlunparse, parse_qsl\n\ndef tag(url, source, medium, campaign):\n    parts = urlparse(url)\n    query = dict(parse_qsl(parts.query))\n    query.update({\n        \"utm_source\": source,\n        \"utm_medium\": medium,\n        \"utm_campaign\": campaign,\n    })\n    return urlunparse(parts._replace(query=urlencode(query)))\n\nlink = tag(\"https://shop.example.com/sale?ref=nav\", \"newsletter\", \"email\", \"black_friday\")\nprint(link)",
+      "expectedOutput": "https://shop.example.com/sale?ref=nav&utm_source=newsletter&utm_medium=email&utm_campaign=black_friday",
+      "steps": [
+        {
+          "lines": [1, 1],
+          "focus": ["urllib.parse"],
+          "explanation": "Everything we need ships with Python — no installs. `urllib.parse` is the standard toolkit for taking URLs apart and putting them back together."
+        },
+        {
+          "lines": [4, 4],
+          "focus": ["urlparse"],
+          "explanation": "`urlparse` splits the link into named parts. Here `parts.path` is `/sale` and `parts.query` is `ref=nav`."
+        },
+        {
+          "lines": [5, 5],
+          "focus": ["parse_qsl", "dict"],
+          "explanation": "`parse_qsl` turns `ref=nav` into `[('ref', 'nav')]`, and `dict(...)` makes it `{'ref': 'nav'}` — easy to edit."
+        },
+        {
+          "lines": [6, 10],
+          "focus": ["update"],
+          "explanation": "`.update()` adds the three UTM keys. If a key already existed (say an old `utm_source`), it is **overwritten** — so re-tagging a link is safe."
+        },
+        {
+          "lines": [11, 11],
+          "focus": ["_replace", "urlencode", "urlunparse"],
+          "explanation": "`urlencode` turns the dict back into `ref=nav&utm_source=...` (escaping spaces and symbols for you). `_replace` swaps in the new query, and `urlunparse` reassembles the full URL — fragment and all."
+        },
+        {
+          "lines": [13, 14],
+          "explanation": "Notice the original `ref=nav` survived. Now try a URL ending in `#reviews` and press **Run** to see the anchor preserved."
+        }
+      ]
+    },
+    {
+      "type": "practice",
+      "id": "practice-1",
+      "title": "Challenge: Bulk-tag a campaign sheet",
+      "challenge": {
+        "id": "pro.marketing.l2.challenge-bulk-utm",
+        "title": "Bulk-tag the Spring Sale links",
+        "difficulty": 3,
+        "prompt": "Your media team exported every Spring Sale link to `data/campaign_links.csv` (columns: `channel`, `url`). Finish the two functions so the script prints **one fully tagged URL per row**, in file order.\n\n`CHANNEL_MAP` tells you the `utm_source` and `utm_medium` for each channel. The campaign name must be cleaned up with `slugify`.",
+        "requirements": [
+          "`slugify(text)` returns lowercase text where runs of spaces/hyphens become a single `_` and any other symbol is removed (\"Spring Sale 2026!\" → \"spring_sale_2026\").",
+          "`add_utm(url, source, medium, campaign)` keeps existing query parameters (like `ref=nav`).",
+          "`add_utm` overwrites any existing `utm_*` values instead of duplicating them.",
+          "`add_utm` keeps the `#fragment` at the end of the URL.",
+          "`add_utm` slugifies the campaign name itself.",
+          "Print only the tagged URLs — one per line."
+        ],
+        "starterCode": "import csv\nimport re\nfrom urllib.parse import urlparse, urlunparse, parse_qsl, urlencode\n\nCHANNEL_MAP = {\n    \"Facebook Ads\": (\"facebook\", \"paid_social\"),\n    \"Newsletter\": (\"newsletter\", \"email\"),\n    \"Google Ads\": (\"google\", \"cpc\"),\n    \"Instagram Bio\": (\"instagram\", \"social\"),\n}\nCAMPAIGN = \"Spring Sale 2026!\"\n\n\ndef slugify(text):\n    # TODO: lowercase, collapse spaces/hyphens into \"_\", drop other symbols\n    return text\n\n\ndef add_utm(url, source, medium, campaign):\n    # TODO: keep existing params + #fragment, add/overwrite utm_* params\n    return url\n\n\nwith open(\"data/campaign_links.csv\", newline=\"\") as f:\n    for row in csv.DictReader(f):\n        source, medium = CHANNEL_MAP[row[\"channel\"]]\n        print(add_utm(row[\"url\"], source, medium, CAMPAIGN))\n",
+        "solution": "import csv\nimport re\nfrom urllib.parse import urlparse, urlunparse, parse_qsl, urlencode\n\nCHANNEL_MAP = {\n    \"Facebook Ads\": (\"facebook\", \"paid_social\"),\n    \"Newsletter\": (\"newsletter\", \"email\"),\n    \"Google Ads\": (\"google\", \"cpc\"),\n    \"Instagram Bio\": (\"instagram\", \"social\"),\n}\nCAMPAIGN = \"Spring Sale 2026!\"\n\n\ndef slugify(text):\n    text = re.sub(r\"[\\s\\-]+\", \"_\", text.strip().lower())\n    return re.sub(r\"[^a-z0-9_]\", \"\", text)\n\n\ndef add_utm(url, source, medium, campaign):\n    parts = urlparse(url)\n    query = dict(parse_qsl(parts.query, keep_blank_values=True))\n    query.update({\n        \"utm_source\": source,\n        \"utm_medium\": medium,\n        \"utm_campaign\": slugify(campaign),\n    })\n    return urlunparse(parts._replace(query=urlencode(query)))\n\n\nwith open(\"data/campaign_links.csv\", newline=\"\") as f:\n    for row in csv.DictReader(f):\n        source, medium = CHANNEL_MAP[row[\"channel\"]]\n        print(add_utm(row[\"url\"], source, medium, CAMPAIGN))\n",
+        "files": [
+          {
+            "path": "data/campaign_links.csv",
+            "content": "channel,url\nFacebook Ads,https://shop.example.com/sale\nNewsletter,https://shop.example.com/sale?ref=nav\nGoogle Ads,https://shop.example.com/boots#reviews\nInstagram Bio,https://shop.example.com/?utm_source=old&lang=en\n"
+          }
+        ],
+        "hints": [
+          { "text": "For `slugify`, the `re` module is your friend: `re.sub(pattern, replacement, text)` replaces every match of `pattern`.", "xpCost": 3 },
+          { "text": "`r\"[\\s\\-]+\"` matches one or more spaces or hyphens. `r\"[^a-z0-9_]\"` matches anything that is *not* a lowercase letter, digit or underscore.", "xpCost": 4 },
+          { "text": "Re-use the walkthrough's `tag()` function for `add_utm` — just remember to call `slugify(campaign)`.", "xpCost": 6 }
+        ],
+        "limits": { "timeoutMs": 4000 },
+        "xpReward": 60,
+        "concepts": ["stdlib.urllib", "files.csv", "strings.normalisation", "regex.sub", "dicts.update"],
+        "tests": [
+          {
+            "id": "t1",
+            "kind": "assert",
+            "name": "slugify cleans campaign names",
+            "hidden": false,
+            "code": "assert slugify(\"Spring Sale 2026!\") == \"spring_sale_2026\"",
+            "failureHint": "Lowercase first, then replace spaces with \"_\", then strip symbols like \"!\"."
+          },
+          {
+            "id": "t2",
+            "kind": "assert",
+            "name": "slugify collapses messy spacing and hyphens",
+            "hidden": false,
+            "code": "assert slugify(\"  Black-Friday  Deals \") == \"black_friday_deals\"",
+            "failureHint": "Strip the ends with `.strip()` and use `+` in your regex so several spaces/hyphens become one underscore."
+          },
+          {
+            "id": "t3",
+            "kind": "assert",
+            "name": "Existing query parameters are kept",
+            "hidden": false,
+            "code": "from urllib.parse import urlparse, parse_qs\n\ndef _q(u):\n    return {k: v[0] for k, v in parse_qs(urlparse(u).query).items()}\n\nassert _q(add_utm(\"https://x.com/a?ref=nav\", \"nl\", \"email\", \"Promo\")) == {\"ref\": \"nav\", \"utm_source\": \"nl\", \"utm_medium\": \"email\", \"utm_campaign\": \"promo\"}"
+          },
+          {
+            "id": "t4",
+            "kind": "assert",
+            "name": "The #fragment stays at the end",
+            "hidden": false,
+            "code": "from urllib.parse import urlparse\n\nresult = add_utm(\"https://x.com/boots#reviews\", \"google\", \"cpc\", \"x\")\nassert urlparse(result).fragment == \"reviews\"\nassert result.endswith(\"#reviews\")",
+            "failureHint": "Build the new URL from the parsed parts (`urlunparse`) instead of adding text to the end."
+          },
+          {
+            "id": "t5",
+            "kind": "assert",
+            "name": "Old utm_* values are overwritten, not duplicated",
+            "hidden": true,
+            "code": "from urllib.parse import urlparse, parse_qs\n\nq = parse_qs(urlparse(add_utm(\"https://x.com/?utm_source=old&lang=en\", \"instagram\", \"social\", \"x\")).query)\nassert q[\"utm_source\"] == [\"instagram\"]\nassert q[\"lang\"] == [\"en\"]"
+          },
+          {
+            "id": "t6",
+            "kind": "assert",
+            "name": "add_utm slugifies the campaign itself",
+            "hidden": true,
+            "code": "from urllib.parse import urlparse, parse_qs\n\nq = parse_qs(urlparse(add_utm(\"https://x.com/\", \"a\", \"b\", \"Summer Launch - EU\")).query)\nassert q[\"utm_campaign\"] == [\"summer_launch_eu\"]"
+          },
+          {
+            "id": "t7",
+            "kind": "stdout",
+            "name": "Prints all four tagged links in file order",
+            "hidden": false,
+            "expected": "^https://shop\\.example\\.com/sale\\?\\S*utm_campaign=spring_sale_2026\\S*\\nhttps://shop\\.example\\.com/sale\\?\\S*ref=nav\\S*\\nhttps://shop\\.example\\.com/boots\\?\\S+#reviews\\nhttps://shop\\.example\\.com/\\?\\S*utm_source=instagram\\S*$",
+            "match": "regex",
+            "failureHint": "Print exactly one URL per CSV row and nothing else."
+          }
+        ]
+      }
+    },
+    {
+      "type": "reinforce",
+      "id": "reinforce-1",
+      "title": "Lock it in",
+      "questions": [
+        {
+          "kind": "multiple_choice",
+          "id": "q1",
+          "prompt": "Your report shows traffic from `Facebook`, `facebook` and `FB` as three separate sources. What is the most robust fix?",
+          "options": [
+            { "id": "a", "text": "Ask everyone to type more carefully" },
+            { "id": "b", "text": "Generate links from a script with a fixed channel → source mapping" },
+            { "id": "c", "text": "Delete the smaller sources from the report" }
+          ],
+          "correctOptionIds": ["b"],
+          "explanation": "A single source of truth (`CHANNEL_MAP`) plus code that applies it guarantees identical labels every time.",
+          "concept": "strings.normalisation"
+        },
+        {
+          "kind": "predict_output",
+          "id": "q2",
+          "prompt": "What does this print?",
+          "code": "from urllib.parse import parse_qsl\nprint(dict(parse_qsl(\"ref=nav&lang=en\")))",
+          "answer": "{'ref': 'nav', 'lang': 'en'}",
+          "explanation": "`parse_qsl` returns a list of `(key, value)` pairs, and `dict()` turns those pairs into a dictionary.",
+          "concept": "stdlib.urllib"
+        },
+        {
+          "kind": "fill_blank",
+          "id": "q3",
+          "prompt": "Complete the line that swaps the new query string into the parsed URL.",
+          "template": "new_url = urlunparse(parts.___(query=urlencode(query)))",
+          "blanks": [["_replace"]],
+          "explanation": "`urlparse` returns a named tuple; `._replace(field=value)` returns a copy with one field changed.",
+          "concept": "stdlib.urllib"
+        },
+        {
+          "kind": "multiple_choice",
+          "id": "q4",
+          "prompt": "Why is `url + \"?utm_source=fb\"` a bad way to tag `https://shop.com/sale?ref=nav#top`?",
+          "options": [
+            { "id": "a", "text": "It creates a second `?`, breaking the query string" },
+            { "id": "b", "text": "The tag ends up after `#top`, so analytics never sees it" },
+            { "id": "c", "text": "It is slower than urllib" }
+          ],
+          "correctOptionIds": ["a", "b"],
+          "explanation": "String concatenation ignores URL structure: you get `...?ref=nav#top?utm_source=fb` — a broken query, and the tag is stuck inside the fragment, which browsers never send to the server.",
+          "concept": "stdlib.urllib"
+        }
+      ]
+    }
+  ]
+}

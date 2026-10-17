@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "id": "core.beginner.u3.l1-conditionals",
+  "title": "Making Decisions with if / elif / else",
+  "summary": "Teach your program to choose: run different code depending on whether a condition is True or False.",
+  "tier": "beginner",
+  "estimatedMinutes": 8,
+  "xpReward": 20,
+  "tags": ["control-flow", "booleans", "comparison-operators"],
+  "concepts": ["conditionals.if", "conditionals.elif", "conditionals.else", "operators.comparison", "syntax.indentation"],
+  "prerequisites": ["core.beginner.u2.l3-booleans"],
+  "certification": [
+    {
+      "exam": "PCEP",
+      "objective": "PCEP-30-02 2.1",
+      "description": "Make decisions and branch the flow with the if instruction (conditional statements: if, if-else, if-elif, if-elif-else)."
+    },
+    {
+      "exam": "PCEP",
+      "objective": "PCEP-30-02 1.4",
+      "description": "Comparison operators: ==, !=, >, >=, <, <=."
+    }
+  ],
+  "requiredPackages": [],
+  "cheatSheetRefs": ["if-statement", "comparison-operators", "indentation"],
+  "cards": [
+    {
+      "type": "explain",
+      "id": "explain-1",
+      "title": "Programs that choose",
+      "body": "So far your programs ran every line, top to bottom. Real programs need to **decide**.\n\nAn `if` statement checks a **condition** — an expression that is either `True` or `False`. If it is `True`, the indented block underneath runs. If not, Python skips it.\n\n```python\nif condition:\n    # runs only when condition is True\nelif other_condition:\n    # checked only if the first one was False\nelse:\n    # runs when nothing above matched\n```\n\nPython checks the branches **in order** and runs **only the first one that matches** — then jumps past the whole block.",
+      "diagram": {
+        "kind": "flow",
+        "caption": "Only one branch ever runs",
+        "nodes": [
+          { "id": "start", "label": "temperature = 31", "shape": "start" },
+          { "id": "c1", "label": "temperature >= 30?", "shape": "decision" },
+          { "id": "c2", "label": "temperature >= 18?", "shape": "decision" },
+          { "id": "hot", "label": "print(\"Hot day\")", "shape": "process" },
+          { "id": "mild", "label": "print(\"Pleasant\")", "shape": "process" },
+          { "id": "cold", "label": "print(\"Jacket\")", "shape": "process" },
+          { "id": "end", "label": "continue program", "shape": "end" }
+        ],
+        "edges": [
+          { "from": "start", "to": "c1" },
+          { "from": "c1", "to": "hot", "label": "True" },
+          { "from": "c1", "to": "c2", "label": "False" },
+          { "from": "c2", "to": "mild", "label": "True" },
+          { "from": "c2", "to": "cold", "label": "False" },
+          { "from": "hot", "to": "end" },
+          { "from": "mild", "to": "end" },
+          { "from": "cold", "to": "end" }
+        ]
+      },
+      "keyPoints": [
+        "A condition is any expression that evaluates to True or False, e.g. `age >= 18`.",
+        "Every `if`, `elif` and `else` line ends with a colon `:`.",
+        "The code inside a branch is indented by 4 spaces — indentation is how Python knows what belongs to the branch.",
+        "`=` stores a value; `==` compares two values.",
+        "Branches are checked top to bottom; only the first True branch runs."
+      ],
+      "realWorld": {
+        "title": "Why this matters in the real world",
+        "body": "Every checkout page you have ever used runs code like this. *Is the customer a member? Is the basket over the free-shipping threshold? Is the card country different from the shipping country (possible fraud)?* Banks, airlines and e-commerce sites encode thousands of business rules as `if / elif / else` chains — and getting the **order** of the checks wrong is one of the most common, costly bugs in production software."
+      }
+    },
+    {
+      "type": "demonstrate",
+      "id": "demo-1",
+      "title": "Walkthrough: a weather advisor",
+      "runnable": true,
+      "code": "temperature = 31\n\nif temperature >= 30:\n    print(\"Hot day - stay hydrated!\")\nelif temperature >= 18:\n    print(\"Pleasant weather.\")\nelse:\n    print(\"Bring a jacket.\")\n\nprint(\"Forecast done.\")",
+      "expectedOutput": "Hot day - stay hydrated!\nForecast done.",
+      "steps": [
+        {
+          "lines": [1, 1],
+          "focus": ["temperature", "31"],
+          "explanation": "We store the number `31` in a variable called `temperature`."
+        },
+        {
+          "lines": [3, 4],
+          "focus": ["if", ">=", ":"],
+          "explanation": "`temperature >= 30` evaluates to `True` (31 is at least 30), so the indented `print` on line 4 runs."
+        },
+        {
+          "lines": [5, 6],
+          "focus": ["elif"],
+          "explanation": "`elif` means *else if*. Because the first branch already matched, Python **skips this check entirely** — even though 31 >= 18 is also True."
+        },
+        {
+          "lines": [7, 8],
+          "focus": ["else"],
+          "explanation": "`else` has no condition: it is the fallback when nothing above matched. Skipped here too."
+        },
+        {
+          "lines": [10, 10],
+          "explanation": "This line is **not indented**, so it is outside the `if` block and always runs. Try changing `temperature` to `12` and press **Run**!"
+        }
+      ]
+    },
+    {
+      "type": "practice",
+      "id": "practice-1",
+      "title": "Challenge: Free-shipping rules",
+      "challenge": {
+        "id": "core.beginner.u3.l1.challenge-shipping",
+        "title": "Free-shipping rules",
+        "difficulty": 2,
+        "prompt": "You're building the checkout for an online store. Complete the function `shipping_cost(order_total, is_member)` so it **returns** the right shipping fee.\n\nThe last two lines read an order total typed by the customer and print the fee for a non-member — don't change them.",
+        "requirements": [
+          "Members (`is_member` is `True`) always pay `0`.",
+          "Orders of **$50 or more** ship free (`0`).",
+          "Orders of **$20 or more** (but under $50) cost `4.99`.",
+          "Anything smaller costs `7.99`.",
+          "Use `return` — don't `print` inside the function."
+        ],
+        "starterCode": "def shipping_cost(order_total, is_member):\n    # TODO: return the correct shipping fee\n    return 0\n\n\ntotal = float(input())\nprint(f\"Shipping: ${shipping_cost(total, False):.2f}\")\n",
+        "solution": "def shipping_cost(order_total, is_member):\n    if is_member:\n        return 0\n    elif order_total >= 50:\n        return 0\n    elif order_total >= 20:\n        return 4.99\n    else:\n        return 7.99\n\n\ntotal = float(input())\nprint(f\"Shipping: ${shipping_cost(total, False):.2f}\")\n",
+        "hints": [
+          { "text": "Check the rules in order from the most specific (members) to the most general (everything else).", "xpCost": 2 },
+          { "text": "Is $50 itself free? \"$50 or more\" means you need `>=`, not `>`.", "xpCost": 3 },
+          { "text": "Skeleton:\n```python\nif is_member:\n    return 0\nelif order_total >= 50:\n    ...\n```", "xpCost": 5 }
+        ],
+        "sampleStdin": "35\n",
+        "limits": { "timeoutMs": 3000 },
+        "xpReward": 30,
+        "concepts": ["conditionals.if", "conditionals.elif", "conditionals.else", "operators.comparison", "functions.return"],
+        "accessoryKeys": ["tab", "dedent", "left", "right", "colon", "parens", "if", "equals", "underscore", "dquote", "undo", "redo"],
+        "tests": [
+          {
+            "id": "t1",
+            "kind": "assert",
+            "name": "Members always ship free",
+            "hidden": false,
+            "stdin": "30\n",
+            "code": "assert shipping_cost(10, True) == 0\nassert shipping_cost(99, True) == 0",
+            "failureHint": "Check `is_member` first, before looking at the order total."
+          },
+          {
+            "id": "t2",
+            "kind": "assert",
+            "name": "Exactly $50 qualifies for free shipping",
+            "hidden": false,
+            "stdin": "30\n",
+            "code": "assert shipping_cost(50, False) == 0",
+            "failureHint": "\"$50 or more\" includes 50 itself — use `>=`."
+          },
+          {
+            "id": "t3",
+            "kind": "assert",
+            "name": "A $20 order costs 4.99",
+            "hidden": false,
+            "stdin": "30\n",
+            "code": "assert shipping_cost(20, False) == 4.99"
+          },
+          {
+            "id": "t4",
+            "kind": "assert",
+            "name": "Small orders cost 7.99",
+            "hidden": true,
+            "stdin": "30\n",
+            "code": "assert shipping_cost(19.99, False) == 7.99\nassert shipping_cost(0.5, False) == 7.99"
+          },
+          {
+            "id": "t5",
+            "kind": "assert",
+            "name": "Just under $50 is not free",
+            "hidden": true,
+            "stdin": "30\n",
+            "code": "assert shipping_cost(49.99, False) == 4.99",
+            "failureHint": "Are your checks in the right order? The $50 rule must be tested before the $20 rule."
+          },
+          {
+            "id": "t6",
+            "kind": "stdout",
+            "name": "Prints the fee for a $12.50 order",
+            "hidden": false,
+            "stdin": "12.5\n",
+            "expected": "Shipping: $7.99",
+            "match": "trimmed"
+          },
+          {
+            "id": "t7",
+            "kind": "stdout",
+            "name": "Prints the fee for a large order",
+            "hidden": true,
+            "stdin": "75\n",
+            "expected": "Shipping: $0.00",
+            "match": "trimmed"
+          }
+        ]
+      }
+    },
+    {
+      "type": "reinforce",
+      "id": "reinforce-1",
+      "title": "Lock it in",
+      "questions": [
+        {
+          "kind": "predict_output",
+          "id": "q1",
+          "prompt": "What does this program print?",
+          "code": "score = 85\nif score >= 90:\n    print(\"A\")\nelif score >= 80:\n    print(\"B\")\nelif score >= 70:\n    print(\"C\")\nelse:\n    print(\"F\")",
+          "answer": "B",
+          "explanation": "85 fails `>= 90`, then passes `>= 80`, so `B` prints. The `>= 70` branch is never checked — only the first matching branch runs.",
+          "concept": "conditionals.elif",
+          "objective": "PCEP-30-02 2.1"
+        },
+        {
+          "kind": "multiple_choice",
+          "id": "q2",
+          "prompt": "Which line correctly checks whether `x` equals 10?",
+          "options": [
+            { "id": "a", "text": "if x = 10:" },
+            { "id": "b", "text": "if x == 10:" },
+            { "id": "c", "text": "if x == 10" },
+            { "id": "d", "text": "if (x = 10):" }
+          ],
+          "correctOptionIds": ["b"],
+          "explanation": "`==` compares, `=` assigns. And every `if` line must end with a colon.",
+          "concept": "operators.comparison",
+          "objective": "PCEP-30-02 1.4"
+        },
+        {
+          "kind": "fill_blank",
+          "id": "q3",
+          "prompt": "Complete the code so it prints \"teen\" for ages 13–19.",
+          "template": "age = 15\nif age < 13:\n    print(\"child\")\n___ age < 20:\n    print(\"teen\")\n___:\n    print(\"adult\")",
+          "blanks": [["elif"], ["else"]],
+          "explanation": "`elif` adds another condition; `else` is the fallback and takes no condition.",
+          "concept": "conditionals.else",
+          "objective": "PCEP-30-02 2.1"
+        },
+        {
+          "kind": "multiple_choice",
+          "id": "q4",
+          "prompt": "How many lines does this print?",
+          "code": "n = 7\nif n > 5:\n    print(\"big\")\nif n > 3:\n    print(\"medium\")\nelse:\n    print(\"small\")",
+          "options": [
+            { "id": "a", "text": "1" },
+            { "id": "b", "text": "2" },
+            { "id": "c", "text": "3" }
+          ],
+          "correctOptionIds": ["b"],
+          "explanation": "These are **two separate** `if` statements (the second starts with `if`, not `elif`), so both are checked: \"big\" and \"medium\" print.",
+          "concept": "conditionals.if",
+          "objective": "PCEP-30-02 2.1"
+        }
+      ]
+    }
+  ]
+}
