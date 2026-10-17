@@ -1,0 +1,100 @@
+name: Build iOS App (No Expo Cloud)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'src/**'
+      - 'app/**'
+      - 'assets/**'
+      - 'package.json'
+      - 'app.json'
+      - '.github/workflows/build-ios.yml'
+
+jobs:
+  build-ios:
+    name: Build Standalone iOS IPA & Simulator App
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Prepare Offline Assets
+        run: npm run prepare:assets
+
+      - name: Generate Native iOS Project (Expo Prebuild)
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Build Unsigned iOS IPA for Sideloading
+        run: |
+          cd ios
+          WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
+          SCHEME="PyPath"
+          echo "Building workspace: $WORKSPACE with scheme: $SCHEME"
+
+          xcodebuild -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build_device \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE="" \
+            clean build
+
+          # Package into .ipa
+          mkdir -p build_device/Payload
+          cp -r build_device/Build/Products/Release-iphoneos/*.app build_device/Payload/
+          cd build_device
+          zip -r PyPath-unsigned.ipa Payload
+          cd ..
+
+      - name: Build iOS Simulator App
+        run: |
+          cd ios
+          WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
+          SCHEME="PyPath"
+          echo "Building simulator app for workspace: $WORKSPACE"
+
+          xcodebuild -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath build_sim \
+            clean build
+
+          cd build_sim/Build/Products/Release-iphonesimulator
+          APP_NAME=$(ls -d *.app | head -n 1)
+          zip -r PyPath-Simulator.app.zip "$APP_NAME"
+          cd ../../../..
+
+      - name: Upload Standalone iOS IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PyPath-iOS-IPA
+          path: ios/build_device/PyPath-unsigned.ipa
+          if-no-files-found: error
+
+      - name: Upload iOS Simulator App Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PyPath-iOS-Simulator
+          path: ios/build_sim/Build/Products/Release-iphonesimulator/PyPath-Simulator.app.zip
+          if-no-files-found: error
